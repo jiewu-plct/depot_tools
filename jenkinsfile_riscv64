@@ -1,0 +1,28 @@
+node("x86_runner1"){
+    stage('*** Cleanup***') {
+        cleanWs()
+    }
+    stage('*** Check out SCM ***') {
+        checkout scm
+    } 
+    stage('*** Compilation Phase ***') { 
+        git branch: 'main', url: 'https://chromium.googlesource.com/chromium/tools/depot_tools.git'
+        sh '''#!/bin/bash
+            ls
+            export PATH=$PATH:$PWD/depot_tools
+            rm -rf v8-riscv64
+            mkdir v8-riscv64 && cd v8-riscv64
+            fetch v8
+            gclient sync
+            cd v8
+            gn gen out/riscv64.release --args='is_component_build=false is_debug=false target_cpu="x64" v8_target_cpu="riscv64" use_goma=false goma_dir="None"'
+            ninja -C out/riscv64.release -j $(nproc)
+         '''
+    }
+    stage (' *** Test ***'){
+        sh '''#!/bin/bash
+            cd v8-riscv64/v8
+            tools/run-tests.py --outdir=out/riscv64.release
+         '''
+    }
+}
