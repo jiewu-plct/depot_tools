@@ -5,9 +5,16 @@ node("x86_runner1"){
     stage('*** Check out SCM ***') {
         checkout scm
     } 
+    stage('*** Get depot_tools ***') {
+        dir('depot_tools') {
+            git branch: 'main', url: 'https://chromium.googlesource.com/chromium/tools/depot_tools.git'
+        }
+    } 
     stage('*** Compilation Phase ***') { 
         git branch: 'main', url: 'https://chromium.googlesource.com/chromium/tools/depot_tools.git'
         sh '''#!/bin/bash
+            cat ./jenkinsfile_riscv64
+            echo 'current dir:' $PWD
             ls
             export PATH=$PATH:$PWD/depot_tools
             rm -rf v8-riscv64
