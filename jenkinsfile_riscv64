@@ -11,7 +11,6 @@ node("x86_runner1"){
         }
     } 
     stage('*** Compilation Phase ***') { 
-        git branch: 'main', url: 'https://chromium.googlesource.com/chromium/tools/depot_tools.git'
         sh '''#!/bin/bash
             cat ./jenkinsfile_riscv64
             echo 'current dir:' $PWD
