@@ -1,0 +1,34 @@
+node("x86_runner1"){
+    stage('*** Cleanup***') {
+        cleanWs()
+    }
+    stage('*** Check out SCM ***') {
+        checkout scm
+    } 
+    stage('*** Get depot_tools ***') {
+        dir('depot_tools') {
+            git branch: 'main', url: 'https://chromium.googlesource.com/chromium/tools/depot_tools.git'
+        }
+    } 
+    stage('*** Compilation Phase ***') {
+        sh '''#!/bin/bash
+            cat ./jenkinsfile_riscv32
+            echo 'current dir:' $PWD
+            ls
+            export PATH=$PATH:$PWD/depot_tools
+            rm -rf v8-riscv32
+            mkdir v8-riscv32 && cd v8-riscv32
+            fetch v8
+            gclient sync
+            cd v8
+            gn gen out/riscv32.release --args='is_component_build=false is_debug=false target_cpu="x86" v8_target_cpu="riscv32" use_goma=false goma_dir="None"'
+            ninja -C out/riscv32.release -j $(nproc)
+         '''
+    }
+    stage (' *** Test ***'){
+        sh '''#!/bin/bash
+            cd v8-riscv32/v8
+            tools/run-tests.py --outdir=out/riscv32.release
+         '''
+    }
+}
